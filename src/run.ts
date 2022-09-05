@@ -86,6 +86,7 @@ const run = async (): Promise<void> => {
       console.log('checks', checks)
       // const pr = github.context.payload.pull_request;
     }
+    
 
   } catch (error) {
     core.startGroup(error instanceof Error ? error.message : JSON.stringify(error));

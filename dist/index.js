@@ -14961,11 +14961,15 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
                 head_sha: ((_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.head.sha) || github.context.payload.after || github.context.sha,
                 status: 'completed',
                 completed_at: new Date(),
-                output: Object.assign({ title: 'PR Next Version publish successful!', summary: `A version for pull request is **published**. version: **${process.env.CURRENT_VERSION}**` }, filesNotCovered.map(file => ({
-                    path: file,
-                    annotation_level: 'failure',
-                    message: 'File not covered by CODEOWNERS'
-                }))),
+                output: {
+                    title: 'PR Next Version publish successful!',
+                    summary: `A version for pull request is **published**. version: **${process.env.CURRENT_VERSION}**`,
+                    annotations: filesNotCovered.map(file => ({
+                        path: file,
+                        annotation_level: 'failure',
+                        message: 'File not covered by CODEOWNERS'
+                    })),
+                },
                 conclusion: isFailure ? 'failure' : 'success',
             });
             console.log('checkResponse', JSON.stringify(checkResponse, null, 2));

@@ -86,7 +86,7 @@ const run = async (): Promise<void> => {
         output: {
           title: 'PR Next Version publish successful!',
           summary: `A version for pull request is **published**. version: **${process.env.CURRENT_VERSION}**`,
-          ...filesNotCovered.map(file => ({
+          annotations: filesNotCovered.map(file => ({
             path: file,
             annotation_level: 'failure',
             message: 'File not covered by CODEOWNERS'

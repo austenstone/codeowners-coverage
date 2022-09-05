@@ -10,6 +10,14 @@ inputs:
     description: The GitHub token used to create an authenticated client
     default: ${{ github.token }}
     required: false
+  include-gitignore:
+    description: Whether to include files in .gitignore
+    default: 'true'
+    required: false
+  ignore-default:
+    description: Whether to ignore the default `*` files
+    default: 'false'
+    required: false
 
 runs:
   using: "node16"

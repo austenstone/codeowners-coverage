@@ -5,11 +5,15 @@ import { readFileSync } from 'fs';
 
 interface Input {
   token: string;
+  'include-gitignore': boolean;
+  'ignore-default': boolean;
 }
 
 export function getInputs(): Input {
   const result = {} as Input;
   result.token = core.getInput('github-token');
+  result['include-gitignore'] = core.getBooleanInput('include-gitignore');
+  result['ignore-default'] = core.getBooleanInput('ignore-default');
   return result;
 }
 
@@ -19,21 +23,39 @@ const run = async (): Promise<void> => {
     const octokit: ReturnType<typeof github.getOctokit> = github.getOctokit(input.token);
     octokit.log.info('');
 
-    const content = readFileSync('CODEOWNERS', 'utf8');
-    // console.log('content', content);
-
     const allFiles = await (await glob.create('*')).glob();
-    // core.info(`All Files: ${allFiles}`);
+    core.info(`ALL Files: ${allFiles.length}`);
 
-    const codeownerGlob = await glob.create(content);
-    const filesCovered = await codeownerGlob.glob();
-    core.info(`CODEOWNER Files: ${filesCovered.length}`);
+    const codeownersBuffer = readFileSync('CODEOWNERS', 'utf8');
+    let codeownersBufferFiles = codeownersBuffer.split('\n').map(line => line.split(' ')[0]);
+    if (input['ignore-default'] === true) {
+      codeownersBufferFiles = codeownersBufferFiles.filter(file => file !== '*');
+    }
+    const codeownersGlob = await glob.create(codeownersBufferFiles.join('\n'));
+    const codeownersFiles = await codeownersGlob.glob();
+    core.info(`CODEOWNER Files: ${codeownersFiles.length}`);
 
-    const filesNotCovered = allFiles.filter(f => !filesCovered.includes(f));
-    core.warning(`Files not covered: ${filesNotCovered.length}`);
+    const gitIgnoreBuffer = readFileSync('.gitignore', 'utf8');
+    const gitIgnoreGlob = await glob.create(gitIgnoreBuffer);
+    const gitIgnoreFiles = await gitIgnoreGlob.glob();
+    core.info(`.gitignore Files: ${gitIgnoreFiles.length}`);
+  
+    let filesCovered = codeownersFiles;
+    let allFilesClean = allFiles;
+    if (input['include-gitignore'] === true) {
+      allFilesClean = allFiles.filter(file => !gitIgnoreFiles.includes(file));
+      filesCovered = filesCovered.filter(file => !gitIgnoreFiles.includes(file));
+    }
 
-    const coveragePercent = (filesCovered.length / allFiles.length) * 100;
-    core.info(`Files covered: ${Math.round(coveragePercent * 100) / 100}%`);
+    const filesNotCovered = allFilesClean.filter(f => !filesCovered.includes(f));
+    core.info(`Files not covered: ${filesNotCovered.length}`);
+
+    const coveragePercent = (filesCovered.length / allFilesClean.length) * 100;
+    core.notice(`CODEOWNERS coverage: ${coveragePercent.toFixed(2)}%`);
+
+    if (github.context.eventName === 'pull_request') {
+      // const pr = github.context.payload.pull_request;
+    }
   } catch (error) {
     core.startGroup(error instanceof Error ? error.message : JSON.stringify(error));
     core.info(JSON.stringify(error, null, 2));

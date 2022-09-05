@@ -1,2 +1,3 @@
-austenstone ./node_modules/**
-austenstone src
+* austenstone
+src austenstone
+README.md 

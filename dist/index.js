@@ -14903,7 +14903,6 @@ function getInputs() {
 }
 exports.getInputs = getInputs;
 const run = () => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
     try {
         const input = getInputs();
         const octokit = github.getOctokit(input.token);
@@ -14955,12 +14954,18 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         core.info(`Files not covered: ${filesNotCovered.length}`);
         if (github.context.eventName === 'pull_request') {
             console.log('pr', JSON.stringify(github.context, null, 2));
-            const checks = yield octokit.rest.checks.listForRef({
+            yield octokit.rest.checks.update({
                 owner: github.context.repo.owner,
                 repo: github.context.repo.repo,
-                ref: ((_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.head.sha) || github.context.sha,
+                status: 'completed',
+                completed_at: new Date(),
+                conclusion: 'success',
+                check_run_id: github.context.runId,
+                output: {
+                    title: 'PR Next Version publish successful!',
+                    summary: `A version for pull request is **published**. version: **${process.env.CURRENT_VERSION}**`,
+                },
             });
-            console.log('checks', checks);
         }
     }
     catch (error) {

@@ -14921,7 +14921,8 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             codeownersBufferFiles = codeownersBufferFiles.filter(file => file !== '*');
         }
         const codeownersGlob = yield glob.create(codeownersBufferFiles.join('\n'));
-        const codeownersFiles = yield codeownersGlob.glob();
+        let codeownersFiles = yield codeownersGlob.glob();
+        codeownersFiles = codeownersFiles.filter(file => allFiles.includes(file));
         core.info(`CODEOWNER Files: ${codeownersFiles.length}`);
         let gitIgnoreFiles = [];
         try {
@@ -14938,6 +14939,9 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         if (input['include-gitignore'] === true) {
             allFilesClean = allFiles.filter(file => !gitIgnoreFiles.includes(file));
             filesCovered = filesCovered.filter(file => !gitIgnoreFiles.includes(file));
+        }
+        if (input.files) {
+            filesCovered = filesCovered.filter(file => allFilesClean.includes(file));
         }
         const coveragePercent = (filesCovered.length / allFilesClean.length) * 100;
         const coverageMessage = `${filesCovered.length}/${allFilesClean.length}(${coveragePercent.toFixed(2)}%) files covered by CODEOWNERS`;

@@ -1,3 +1,5 @@
+![CODEOWNER Coverage](https://badgen.net/badge/CODEOWNER%20Coverage/80%/blue?icon=github)
+
 # Action
 
 An [Action](https://docs.github.com/en/actions).

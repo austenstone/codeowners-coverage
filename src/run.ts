@@ -51,7 +51,10 @@ const run = async (): Promise<void> => {
     core.info(`Files not covered: ${filesNotCovered.length}`);
 
     const coveragePercent = (filesCovered.length / allFilesClean.length) * 100;
-    core.notice(`CODEOWNERS coverage: ${coveragePercent.toFixed(2)}%`);
+    core.notice(`CODEOWNERS coverage: ${coveragePercent.toFixed(2)}%`, {
+      title: 'CODEOWNERS Coverage',
+      file: 'CODEOWNERS'
+    });
 
     if (github.context.eventName === 'pull_request') {
       // const pr = github.context.payload.pull_request;

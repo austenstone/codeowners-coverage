@@ -20,8 +20,8 @@ inputs:
     required: false
   fail-if-not-covered:
     description: Whether to fail if not all files are covered
-    default: 'false'
-    required: true
+    default: 'true'
+    required: false
 
 runs:
   using: "node16"

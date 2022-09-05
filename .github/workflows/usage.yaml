@@ -4,7 +4,7 @@ on:
 
 jobs:
   run:
-    name: Run Action
+    name: Check CODEOWNERS Coverage
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

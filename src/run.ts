@@ -77,6 +77,13 @@ const run = async (): Promise<void> => {
     core.info(`Files not covered: ${filesNotCovered.length}`);
 
     if (github.context.eventName === 'pull_request') {
+      console.log('pr', JSON.stringify(github.context, null, 2));
+      const checks = await octokit.rest.checks.listForRef({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        ref: github.context.payload.pull_request?.head.sha || github.context.sha,
+      })
+      console.log('checks', checks)
       // const pr = github.context.payload.pull_request;
     }
 

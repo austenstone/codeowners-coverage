@@ -14929,8 +14929,8 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         core.info(`Files not covered: ${filesNotCovered.length}`);
         const coveragePercent = (filesCovered.length / allFilesClean.length) * 100;
         core.notice(`CODEOWNERS coverage: ${coveragePercent.toFixed(2)}%`, {
-            title: 'CODEOWNERS Coverage',
-            file: 'CODEOWNERS'
+            title: 'Coverage',
+            file: './CODEOWNERS'
         });
         if (github.context.eventName === 'pull_request') {
         }

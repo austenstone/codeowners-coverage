@@ -46,7 +46,7 @@ const run = async (): Promise<void> => {
     } catch (error) {
       core.info('No .gitignore file found');
     }
-  
+
     let filesCovered = codeownersFiles;
     let allFilesClean = allFiles;
     if (input['include-gitignore'] === true) {
@@ -55,13 +55,12 @@ const run = async (): Promise<void> => {
     }
     const coveragePercent = (filesCovered.length / allFilesClean.length) * 100;
     const coverageMessage = `${filesCovered.length}/${allFilesClean.length}(${coveragePercent.toFixed(2)}%) files covered by CODEOWNERS`;
-    core.notice(coverageMessage, {
+    (input['fail-if-not-covered'] === true && coveragePercent < 100 ?
+      core.setFailed : core.notice
+    )(coverageMessage, {
       title: 'Coverage',
       file: 'CODEOWNERS'
     });
-    if (input['fail-if-not-covered'] === true && coveragePercent < 100) {
-      core.setFailed(coverageMessage);
-    }
 
     const filesNotCovered = allFilesClean.filter(f => !filesCovered.includes(f));
     core.info(`Files not covered: ${filesNotCovered.length}`);

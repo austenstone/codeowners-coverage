@@ -1,8 +1,7 @@
-name: Usage
+name: CODEOWNERS Coverage Changed
 on:
   push:
   pull_request:
-  workflow_dispatch:
 
 jobs:
   run:

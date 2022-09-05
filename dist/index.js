@@ -14897,6 +14897,7 @@ function getInputs() {
     result.token = core.getInput('github-token');
     result['include-gitignore'] = core.getBooleanInput('include-gitignore');
     result['ignore-default'] = core.getBooleanInput('ignore-default');
+    result['fail-if-not-covered'] = core.getBooleanInput('fail-if-not-covered');
     return result;
 }
 exports.getInputs = getInputs;
@@ -14915,23 +14916,33 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         const codeownersGlob = yield glob.create(codeownersBufferFiles.join('\n'));
         const codeownersFiles = yield codeownersGlob.glob();
         core.info(`CODEOWNER Files: ${codeownersFiles.length}`);
-        const gitIgnoreBuffer = (0, fs_1.readFileSync)('.gitignore', 'utf8');
-        const gitIgnoreGlob = yield glob.create(gitIgnoreBuffer);
-        const gitIgnoreFiles = yield gitIgnoreGlob.glob();
-        core.info(`.gitignore Files: ${gitIgnoreFiles.length}`);
+        let gitIgnoreFiles = [];
+        try {
+            const gitIgnoreBuffer = (0, fs_1.readFileSync)('.gitignore', 'utf8');
+            const gitIgnoreGlob = yield glob.create(gitIgnoreBuffer);
+            gitIgnoreFiles = yield gitIgnoreGlob.glob();
+            core.info(`.gitignore Files: ${gitIgnoreFiles.length}`);
+        }
+        catch (error) {
+            core.info('No .gitignore file found');
+        }
         let filesCovered = codeownersFiles;
         let allFilesClean = allFiles;
         if (input['include-gitignore'] === true) {
             allFilesClean = allFiles.filter(file => !gitIgnoreFiles.includes(file));
             filesCovered = filesCovered.filter(file => !gitIgnoreFiles.includes(file));
         }
+        const coveragePercent = (filesCovered.length / allFilesClean.length) * 100;
+        const coverageMessage = `${filesCovered.length}/${allFilesClean.length}(${coveragePercent.toFixed(2)}%) files covered by CODEOWNERS`;
+        core.notice(coverageMessage, {
+            title: 'Coverage',
+            file: 'CODEOWNERS'
+        });
+        if (input['fail-if-not-covered'] === true && coveragePercent < 100) {
+            core.setFailed(coverageMessage);
+        }
         const filesNotCovered = allFilesClean.filter(f => !filesCovered.includes(f));
         core.info(`Files not covered: ${filesNotCovered.length}`);
-        const coveragePercent = (filesCovered.length / allFilesClean.length) * 100;
-        core.notice(`CODEOWNERS coverage: ${coveragePercent.toFixed(2)}%`, {
-            title: 'Coverage',
-            file: './CODEOWNERS'
-        });
         if (github.context.eventName === 'pull_request') {
         }
     }

@@ -14897,7 +14897,6 @@ function getInputs() {
     result.token = core.getInput('github-token');
     result['include-gitignore'] = core.getBooleanInput('include-gitignore');
     result['ignore-default'] = core.getBooleanInput('ignore-default');
-    result['fail-if-not-covered'] = core.getBooleanInput('fail-if-not-covered');
     result.files = core.getInput('files');
     return result;
 }
@@ -14907,7 +14906,6 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const input = getInputs();
         const octokit = github.getOctokit(input.token);
-        octokit.log.info('');
         let allFiles = [];
         if (input.files) {
             allFiles = input.files.split(' ');
@@ -14946,8 +14944,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         }
         const coveragePercent = (filesCovered.length / allFilesClean.length) * 100;
         const coverageMessage = `${filesCovered.length}/${allFilesClean.length}(${coveragePercent.toFixed(2)}%) files covered by CODEOWNERS`;
-        const isFailure = input['fail-if-not-covered'] === true && coveragePercent < 100;
-        (isFailure ? core.setFailed : core.notice)(coverageMessage, {
+        core.notice(coverageMessage, {
             title: 'Coverage',
             file: 'CODEOWNERS'
         });
@@ -14972,7 +14969,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
                         end_line: 1,
                     })),
                 },
-                conclusion: isFailure ? 'failure' : 'success',
+                conclusion: coveragePercent < 100 ? 'failure' : 'success',
             });
             console.log('checkResponse', JSON.stringify(checkResponse, null, 2));
         }

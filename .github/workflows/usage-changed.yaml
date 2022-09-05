@@ -1,11 +1,11 @@
-name: CODEOWNERS Coverage Changed
+name: CODEOWNERS
 on:
   push:
   pull_request:
 
 jobs:
   run:
-    name: Check CODEOWNERS Coverage
+    name: Check Coverage
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

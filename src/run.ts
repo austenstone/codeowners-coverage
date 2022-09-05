@@ -78,15 +78,23 @@ const run = async (): Promise<void> => {
 
     if (github.context.eventName === 'pull_request') {
       console.log('pr', JSON.stringify(github.context, null, 2));
-      const checks = await octokit.rest.checks.listForRef({
+
+
+      await octokit.rest.checks.update({
         owner: github.context.repo.owner,
         repo: github.context.repo.repo,
-        ref: github.context.payload.pull_request?.head.sha || github.context.sha,
-      })
-      console.log('checks', checks)
+        status: 'completed',
+        completed_at: new Date(),
+        conclusion: 'success',
+        check_run_id: github.context.runId,
+        output: {
+          title: 'PR Next Version publish successful!',
+          summary: `A version for pull request is **published**. version: **${process.env.CURRENT_VERSION}**`,
+        },
+      });
       // const pr = github.context.payload.pull_request;
     }
-    
+
 
   } catch (error) {
     core.startGroup(error instanceof Error ? error.message : JSON.stringify(error));

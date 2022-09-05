@@ -14959,14 +14959,15 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             yield octokit.rest.checks.create({
                 owner: github.context.repo.owner,
                 repo: github.context.repo.repo,
-                status: 'completed',
+                name: 'CODEOWNERS Coverage',
                 head_sha: github.context.payload.after || ((_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.head.sha) || github.context.sha,
+                status: 'completed',
                 completed_at: new Date(),
-                conclusion: 'success',
                 output: {
                     title: 'PR Next Version publish successful!',
                     summary: `A version for pull request is **published**. version: **${process.env.CURRENT_VERSION}**`,
                 },
+                conclusion: 'success',
             });
         }
     }

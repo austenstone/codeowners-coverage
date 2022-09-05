@@ -18,10 +18,6 @@ inputs:
     description: Whether to ignore the default `*` files
     default: 'false'
     required: false
-  fail-if-not-covered:
-    description: Whether to fail if not all files are covered
-    default: 'true'
-    required: false
   files:
     description: The files to check
     required: false

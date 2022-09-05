@@ -8,6 +8,7 @@ interface Input {
   'include-gitignore': boolean;
   'ignore-default': boolean;
   'fail-if-not-covered': boolean;
+  files: string;
 }
 
 export function getInputs(): Input {
@@ -16,6 +17,7 @@ export function getInputs(): Input {
   result['include-gitignore'] = core.getBooleanInput('include-gitignore');
   result['ignore-default'] = core.getBooleanInput('ignore-default');
   result['fail-if-not-covered'] = core.getBooleanInput('fail-if-not-covered');
+  result.files = core.getInput('files');
   return result;
 }
 
@@ -25,7 +27,12 @@ const run = async (): Promise<void> => {
     const octokit: ReturnType<typeof github.getOctokit> = github.getOctokit(input.token);
     octokit.log.info('');
 
-    const allFiles = await (await glob.create('*')).glob();
+    let allFiles: string[] = [];
+    if (input.files) {
+      allFiles = input.files.split(' ');
+    } else {
+      allFiles = await (await glob.create('*')).glob();
+    }
     core.info(`ALL Files: ${allFiles.length}`);
 
     const codeownersBuffer = readFileSync('CODEOWNERS', 'utf8');
@@ -34,7 +41,8 @@ const run = async (): Promise<void> => {
       codeownersBufferFiles = codeownersBufferFiles.filter(file => file !== '*');
     }
     const codeownersGlob = await glob.create(codeownersBufferFiles.join('\n'));
-    const codeownersFiles = await codeownersGlob.glob();
+    let codeownersFiles = await codeownersGlob.glob();
+    codeownersFiles = codeownersFiles.filter(file => allFiles.includes(file));
     core.info(`CODEOWNER Files: ${codeownersFiles.length}`);
 
     let gitIgnoreFiles: string[] = [];
@@ -52,6 +60,9 @@ const run = async (): Promise<void> => {
     if (input['include-gitignore'] === true) {
       allFilesClean = allFiles.filter(file => !gitIgnoreFiles.includes(file));
       filesCovered = filesCovered.filter(file => !gitIgnoreFiles.includes(file));
+    }
+    if (input.files) {
+      filesCovered = filesCovered.filter(file => allFilesClean.includes(file));
     }
     const coveragePercent = (filesCovered.length / allFilesClean.length) * 100;
     const coverageMessage = `${filesCovered.length}/${allFilesClean.length}(${coveragePercent.toFixed(2)}%) files covered by CODEOWNERS`;

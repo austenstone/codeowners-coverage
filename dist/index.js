@@ -14898,6 +14898,7 @@ function getInputs() {
     result['include-gitignore'] = core.getBooleanInput('include-gitignore');
     result['ignore-default'] = core.getBooleanInput('ignore-default');
     result['fail-if-not-covered'] = core.getBooleanInput('fail-if-not-covered');
+    result.files = core.getInput('files');
     return result;
 }
 exports.getInputs = getInputs;
@@ -14906,7 +14907,13 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         const input = getInputs();
         const octokit = github.getOctokit(input.token);
         octokit.log.info('');
-        const allFiles = yield (yield glob.create('*')).glob();
+        let allFiles = [];
+        if (input.files) {
+            allFiles = input.files.split(' ');
+        }
+        else {
+            allFiles = yield (yield glob.create('*')).glob();
+        }
         core.info(`ALL Files: ${allFiles.length}`);
         const codeownersBuffer = (0, fs_1.readFileSync)('CODEOWNERS', 'utf8');
         let codeownersBufferFiles = codeownersBuffer.split('\n').map(line => line.split(' ')[0]);

@@ -22,6 +22,9 @@ inputs:
     description: Whether to fail if not all files are covered
     default: 'false'
     required: false
+  files:
+    description: The files to check
+    required: false
 
 runs:
   using: "node16"

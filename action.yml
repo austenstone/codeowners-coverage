@@ -1,6 +1,6 @@
-name: TypeScript Action
+name: CODEOWNERS Coverage
 author: Austen Stone
-description: A TypeScript Action
+description: Checks if files are covered by the CODEOWNERS file
 branding:
   icon: "user"
   color: "red"

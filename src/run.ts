@@ -89,7 +89,9 @@ const run = async (): Promise<void> => {
           annotations: filesNotCovered.map(file => ({
             path: file,
             annotation_level: 'failure',
-            message: 'File not covered by CODEOWNERS'
+            message: 'File not covered by CODEOWNERS',
+            start_line: 1,
+            end_line: 1,
           })),
         },
         conclusion: isFailure ? 'failure' : 'success',

@@ -14954,13 +14954,12 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         const filesNotCovered = allFilesClean.filter(f => !filesCovered.includes(f));
         core.info(`Files not covered: ${filesNotCovered.length}`);
         if (github.context.eventName === 'pull_request') {
-            console.log('pr', JSON.stringify(github.context, null, 2));
             github.context.payload.after;
-            yield octokit.rest.checks.create({
+            const checkResponse = yield octokit.rest.checks.create({
                 owner: github.context.repo.owner,
                 repo: github.context.repo.repo,
                 name: 'CODEOWNERS Coverage',
-                head_sha: github.context.payload.after || ((_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.head.sha) || github.context.sha,
+                head_sha: ((_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.head.sha) || github.context.payload.after || github.context.sha,
                 status: 'completed',
                 completed_at: new Date(),
                 output: {
@@ -14969,6 +14968,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
                 },
                 conclusion: 'success',
             });
+            console.log('checkResponse', JSON.stringify(checkResponse, null, 2));
         }
     }
     catch (error) {

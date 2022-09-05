@@ -79,7 +79,6 @@ const run = async (): Promise<void> => {
     if (github.context.eventName === 'pull_request') {
       console.log('pr', JSON.stringify(github.context, null, 2));
 
-
       await octokit.rest.checks.update({
         owner: github.context.repo.owner,
         repo: github.context.repo.repo,

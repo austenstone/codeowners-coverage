@@ -88,7 +88,7 @@ const run = async (): Promise<void> => {
             message: 'File not covered by CODEOWNERS',
             start_line: 0,
             end_line: 1,
-          })),
+          })).slice(0, 50),
         },
         conclusion: coveragePercent < 100 ? 'failure' : 'success',
       });

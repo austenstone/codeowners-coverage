@@ -23,6 +23,7 @@ export const runAction = async (octokit: ReturnType<typeof github.getOctokit>, i
   let allFiles: string[] = [];
   if (input.files) {
     allFiles = input.files.split(' ');
+    allFiles = await (await glob.create(allFiles.join('\n'))).glob();
   } else {
     allFiles = await (await glob.create('*')).glob();
   }

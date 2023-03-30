@@ -12019,6 +12019,7 @@ const runAction = (octokit, input) => __awaiter(void 0, void 0, void 0, function
     let allFiles = [];
     if (input.files) {
         allFiles = input.files.split(' ');
+        allFiles = yield (yield glob.create(allFiles.join('\n'))).glob();
     }
     else {
         allFiles = yield (yield glob.create('*')).glob();

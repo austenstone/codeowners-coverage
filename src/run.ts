@@ -32,7 +32,16 @@ const run = async (): Promise<void> => {
     }
     core.info(`ALL Files: ${allFiles.length}`);
 
-    const codeownersBuffer = readFileSync('CODEOWNERS', 'utf8');
+    let codeownersBuffer: String;
+    try {
+      codeownersBuffer = readFileSync('CODEOWNERS', 'utf8');
+    } catch (error) {
+      try {
+        codeownersBuffer = readFileSync('.github/CODEOWNERS', 'utf8');
+      } catch (error) {
+        throw new Error('No CODEOWNERS file found');
+      }
+    }
     let codeownersBufferFiles = codeownersBuffer.split('\n').map(line => line.split(' ')[0]);
     if (input['ignore-default'] === true) {
       codeownersBufferFiles = codeownersBufferFiles.filter(file => file !== '*');

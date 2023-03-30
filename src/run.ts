@@ -30,9 +30,11 @@ const run = async (): Promise<void> => {
     } else {
       allFiles = await (await glob.create('*')).glob();
     }
-    core.info(`ALL Files: ${allFiles.length}`);
+    core.startGroup(`All Files: ${allFiles.length}`);
+    core.info(JSON.stringify(allFiles));
+    core.endGroup();
 
-    let codeownersBuffer: String;
+    let codeownersBuffer: string;
     try {
       codeownersBuffer = readFileSync('CODEOWNERS', 'utf8');
     } catch (error) {
@@ -42,16 +44,25 @@ const run = async (): Promise<void> => {
         throw new Error('No CODEOWNERS file found');
       }
     }
+    core.startGroup('CODEOWNERS FILE');
+    core.info(codeownersBuffer);
+    core.endGroup();
     let codeownersBufferFiles = codeownersBuffer.split('\n').map(line => line.split(' ')[0]);
+    codeownersBufferFiles = codeownersBufferFiles.filter(file => !file.startsWith('#'));
+    codeownersBufferFiles = codeownersBufferFiles.map(file => file.replace(/^\//, ''));
     if (input['ignore-default'] === true) {
       codeownersBufferFiles = codeownersBufferFiles.filter(file => file !== '*');
     }
-    codeownersBufferFiles = codeownersBufferFiles.filter(file => !file.startsWith('#'));
-    codeownersBufferFiles = codeownersBufferFiles.map(file => file.replace(/^\//, ''));
+    core.startGroup('CODEOWNERS Buffer');
+    core.info(JSON.stringify(codeownersBufferFiles));
+    core.endGroup();
     const codeownersGlob = await glob.create(codeownersBufferFiles.join('\n'));
     let codeownersFiles = await codeownersGlob.glob();
     codeownersFiles = codeownersFiles.filter(file => allFiles.includes(file));
     core.info(`CODEOWNER Files: ${codeownersFiles.length}`);
+    core.startGroup('CODEOWNERS');
+    core.info(JSON.stringify(codeownersFiles));
+    core.endGroup();
 
     let gitIgnoreFiles: string[] = [];
     try {
@@ -103,7 +114,7 @@ const run = async (): Promise<void> => {
         },
         conclusion: coveragePercent < 100 ? 'failure' : 'success',
       });
-      console.log('checkResponse', JSON.stringify(checkResponse, null, 2));
+      console.log('Check Response OK: ', checkResponse.status);
     }
   } catch (error) {
     core.startGroup(error instanceof Error ? error.message : JSON.stringify(error));

@@ -46,7 +46,7 @@ jobs:
       - uses: actions/checkout@v3
       - id: changed-files
         uses: tj-actions/changed-files@v29.0.3
-      - uses: ./
+      - uses: austenstone/codeowners-coverage@main
         with:
           ignore-default: 'true'
           files: ${{ steps.changed-files.outputs.all_changed_files }}

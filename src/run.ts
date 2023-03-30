@@ -49,12 +49,11 @@ export const runAction = async (octokit: ReturnType<typeof github.getOctokit>, i
   if (input['ignore-default'] === true) {
     codeownersBufferFiles = codeownersBufferFiles.filter(file => file !== '*');
   }
-  core.startGroup('CODEOWNERS Buffer');
-  core.info(JSON.stringify(codeownersBufferFiles));
-  core.endGroup();
   const codeownersGlob = await glob.create(codeownersBufferFiles.join('\n'));
   let codeownersFiles = await codeownersGlob.glob();
-  core.info(`CODEOWNERS Files: ${codeownersFiles.length}`);
+  core.startGroup(`CODEOWNERS Files: ${codeownersFiles.length}`);
+  core.info(JSON.stringify(codeownersFiles));
+  core.endGroup();
   codeownersFiles = codeownersFiles.filter(file => allFiles.includes(file));
   core.info(`CODEOWNER Files in All Files: ${codeownersFiles.length}`);
   core.startGroup('CODEOWNERS');

@@ -12043,6 +12043,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         if (input['ignore-default'] === true) {
             codeownersBufferFiles = codeownersBufferFiles.filter(file => file !== '*');
         }
+        codeownersBufferFiles = codeownersBufferFiles.filter(file => !file.startsWith('#'));
         codeownersBufferFiles = codeownersBufferFiles.map(file => file.replace(/^\//, ''));
         const codeownersGlob = yield glob.create(codeownersBufferFiles.join('\n'));
         let codeownersFiles = yield codeownersGlob.glob();

@@ -46,6 +46,7 @@ const run = async (): Promise<void> => {
     if (input['ignore-default'] === true) {
       codeownersBufferFiles = codeownersBufferFiles.filter(file => file !== '*');
     }
+    codeownersBufferFiles = codeownersBufferFiles.filter(file => !file.startsWith('#'));
     codeownersBufferFiles = codeownersBufferFiles.map(file => file.replace(/^\//, ''));
     const codeownersGlob = await glob.create(codeownersBufferFiles.join('\n'));
     let codeownersFiles = await codeownersGlob.glob();

@@ -12000,7 +12000,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getInputs = void 0;
+exports.runAction = exports.getInputs = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const glob = __importStar(__nccwpck_require__(8090));
@@ -12014,102 +12014,107 @@ function getInputs() {
     return result;
 }
 exports.getInputs = getInputs;
-const run = () => __awaiter(void 0, void 0, void 0, function* () {
+const runAction = (octokit, input) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
+    let allFiles = [];
+    if (input.files) {
+        allFiles = input.files.split(' ');
+    }
+    else {
+        allFiles = yield (yield glob.create('*')).glob();
+    }
+    core.startGroup(`All Files: ${allFiles.length}`);
+    core.info(JSON.stringify(allFiles));
+    core.endGroup();
+    let codeownersBuffer;
+    try {
+        codeownersBuffer = (0, fs_1.readFileSync)('CODEOWNERS', 'utf8');
+    }
+    catch (error) {
+        try {
+            codeownersBuffer = (0, fs_1.readFileSync)('.github/CODEOWNERS', 'utf8');
+        }
+        catch (error) {
+            throw new Error('No CODEOWNERS file found');
+        }
+    }
+    core.startGroup('CODEOWNERS File');
+    core.info(codeownersBuffer);
+    core.endGroup();
+    let codeownersBufferFiles = codeownersBuffer.split('\n').map(line => line.split(' ')[0]);
+    codeownersBufferFiles = codeownersBufferFiles.filter(file => !file.startsWith('#'));
+    codeownersBufferFiles = codeownersBufferFiles.map(file => file.replace(/^\//, ''));
+    if (input['ignore-default'] === true) {
+        codeownersBufferFiles = codeownersBufferFiles.filter(file => file !== '*');
+    }
+    core.startGroup('CODEOWNERS Buffer');
+    core.info(JSON.stringify(codeownersBufferFiles));
+    core.endGroup();
+    const codeownersGlob = yield glob.create(codeownersBufferFiles.join('\n'));
+    let codeownersFiles = yield codeownersGlob.glob();
+    core.info(`CODEOWNERS Files: ${codeownersFiles.length}`);
+    codeownersFiles = codeownersFiles.filter(file => allFiles.includes(file));
+    core.info(`CODEOWNER Files in All Files: ${codeownersFiles.length}`);
+    core.startGroup('CODEOWNERS');
+    core.info(JSON.stringify(codeownersFiles));
+    core.endGroup();
+    let gitIgnoreFiles = [];
+    try {
+        const gitIgnoreBuffer = (0, fs_1.readFileSync)('.gitignore', 'utf8');
+        const gitIgnoreGlob = yield glob.create(gitIgnoreBuffer);
+        gitIgnoreFiles = yield gitIgnoreGlob.glob();
+        core.info(`.gitignore Files: ${gitIgnoreFiles.length}`);
+    }
+    catch (error) {
+        core.info('No .gitignore file found');
+    }
+    let filesCovered = codeownersFiles;
+    let allFilesClean = allFiles;
+    if (input['include-gitignore'] === true) {
+        allFilesClean = allFiles.filter(file => !gitIgnoreFiles.includes(file));
+        filesCovered = filesCovered.filter(file => !gitIgnoreFiles.includes(file));
+    }
+    if (input.files) {
+        filesCovered = filesCovered.filter(file => allFilesClean.includes(file));
+    }
+    const coveragePercent = (filesCovered.length / allFilesClean.length) * 100;
+    const coverageMessage = `${filesCovered.length}/${allFilesClean.length}(${coveragePercent.toFixed(2)}%) files covered by CODEOWNERS`;
+    core.notice(coverageMessage, {
+        title: 'Coverage',
+        file: 'CODEOWNERS'
+    });
+    const filesNotCovered = allFilesClean.filter(f => !filesCovered.includes(f));
+    core.info(`Files not covered: ${filesNotCovered.length}`);
+    if (github.context.eventName === 'pull_request') {
+        const checkResponse = yield octokit.rest.checks.create({
+            owner: github.context.repo.owner,
+            repo: github.context.repo.repo,
+            name: 'Changed Files have CODEOWNERS',
+            head_sha: ((_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.head.sha) || github.context.payload.after || github.context.sha,
+            status: 'completed',
+            completed_at: new Date(),
+            output: {
+                title: 'PR Next Version publish successful!',
+                summary: `A version for pull request is **published**. version: **${process.env.CURRENT_VERSION}**`,
+                annotations: filesNotCovered.map(file => ({
+                    path: file,
+                    annotation_level: 'failure',
+                    message: 'File not covered by CODEOWNERS',
+                    start_line: 0,
+                    end_line: 1,
+                })).slice(0, 50),
+            },
+            conclusion: coveragePercent < 100 ? 'failure' : 'success',
+        });
+        console.log('Check Response OK: ', checkResponse.status);
+    }
+});
+exports.runAction = runAction;
+const run = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const input = getInputs();
         const octokit = github.getOctokit(input.token);
-        let allFiles = [];
-        if (input.files) {
-            allFiles = input.files.split(' ');
-        }
-        else {
-            allFiles = yield (yield glob.create('*')).glob();
-        }
-        core.startGroup(`All Files: ${allFiles.length}`);
-        core.info(JSON.stringify(allFiles));
-        core.endGroup();
-        let codeownersBuffer;
-        try {
-            codeownersBuffer = (0, fs_1.readFileSync)('CODEOWNERS', 'utf8');
-        }
-        catch (error) {
-            try {
-                codeownersBuffer = (0, fs_1.readFileSync)('.github/CODEOWNERS', 'utf8');
-            }
-            catch (error) {
-                throw new Error('No CODEOWNERS file found');
-            }
-        }
-        core.startGroup('CODEOWNERS FILE');
-        core.info(codeownersBuffer);
-        core.endGroup();
-        let codeownersBufferFiles = codeownersBuffer.split('\n').map(line => line.split(' ')[0]);
-        codeownersBufferFiles = codeownersBufferFiles.filter(file => !file.startsWith('#'));
-        codeownersBufferFiles = codeownersBufferFiles.map(file => file.replace(/^\//, ''));
-        if (input['ignore-default'] === true) {
-            codeownersBufferFiles = codeownersBufferFiles.filter(file => file !== '*');
-        }
-        core.startGroup('CODEOWNERS Buffer');
-        core.info(JSON.stringify(codeownersBufferFiles));
-        core.endGroup();
-        const codeownersGlob = yield glob.create(codeownersBufferFiles.join('\n'));
-        let codeownersFiles = yield codeownersGlob.glob();
-        codeownersFiles = codeownersFiles.filter(file => allFiles.includes(file));
-        core.info(`CODEOWNER Files: ${codeownersFiles.length}`);
-        core.startGroup('CODEOWNERS');
-        core.info(JSON.stringify(codeownersFiles));
-        core.endGroup();
-        let gitIgnoreFiles = [];
-        try {
-            const gitIgnoreBuffer = (0, fs_1.readFileSync)('.gitignore', 'utf8');
-            const gitIgnoreGlob = yield glob.create(gitIgnoreBuffer);
-            gitIgnoreFiles = yield gitIgnoreGlob.glob();
-            core.info(`.gitignore Files: ${gitIgnoreFiles.length}`);
-        }
-        catch (error) {
-            core.info('No .gitignore file found');
-        }
-        let filesCovered = codeownersFiles;
-        let allFilesClean = allFiles;
-        if (input['include-gitignore'] === true) {
-            allFilesClean = allFiles.filter(file => !gitIgnoreFiles.includes(file));
-            filesCovered = filesCovered.filter(file => !gitIgnoreFiles.includes(file));
-        }
-        if (input.files) {
-            filesCovered = filesCovered.filter(file => allFilesClean.includes(file));
-        }
-        const coveragePercent = (filesCovered.length / allFilesClean.length) * 100;
-        const coverageMessage = `${filesCovered.length}/${allFilesClean.length}(${coveragePercent.toFixed(2)}%) files covered by CODEOWNERS`;
-        core.notice(coverageMessage, {
-            title: 'Coverage',
-            file: 'CODEOWNERS'
-        });
-        const filesNotCovered = allFilesClean.filter(f => !filesCovered.includes(f));
-        core.info(`Files not covered: ${filesNotCovered.length}`);
-        if (github.context.eventName === 'pull_request') {
-            const checkResponse = yield octokit.rest.checks.create({
-                owner: github.context.repo.owner,
-                repo: github.context.repo.repo,
-                name: 'Changed Files have CODEOWNERS',
-                head_sha: ((_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.head.sha) || github.context.payload.after || github.context.sha,
-                status: 'completed',
-                completed_at: new Date(),
-                output: {
-                    title: 'PR Next Version publish successful!',
-                    summary: `A version for pull request is **published**. version: **${process.env.CURRENT_VERSION}**`,
-                    annotations: filesNotCovered.map(file => ({
-                        path: file,
-                        annotation_level: 'failure',
-                        message: 'File not covered by CODEOWNERS',
-                        start_line: 0,
-                        end_line: 1,
-                    })).slice(0, 50),
-                },
-                conclusion: coveragePercent < 100 ? 'failure' : 'success',
-            });
-            console.log('Check Response OK: ', checkResponse.status);
-        }
+        return (0, exports.runAction)(octokit, input);
     }
     catch (error) {
         core.startGroup(error instanceof Error ? error.message : JSON.stringify(error));
